@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Hasil Kesamaan - Detektor Kesamaan Skripsi Unismuh Makassar FKIP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+    }
+
+    .hover-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-search-plus text-primary me-2"></i>
+                        Hasil Pemeriksaan Kesamaan
+                    </h2>
+                    <a href="{{ url_for('check_title') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Periksa Judul Lain
+                    </a>
+                </div>
+
+                <div class="alert alert-light border">
+                    <p class="mb-0"><strong>Judul yang Diperiksa:</strong></p>
+                    <p class="mb-0 mt-2 font-monospace">{{ results.input_title }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results.similar_titles %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2"></i>
+                        Judul Serupa Ditemukan ({{ results.similar_titles|length }})
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 70px">#</th>
+                                    <th>Judul</th>
+                                    <th class="text-center" style="width: 150px">Kesamaan</th>
+                                    <th class="text-center" style="width: 100px">ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for title in results.similar_titles %}
+                                    <tr>
+                                        <td class="text-center">{{ loop.index }}</td>
+                                        <td>{{ title.title }}</td>
+                                        <td class="text-center">
+                                            {% set sim_score = title.similarity %}
+                                            {% if sim_score >= 0.8 %}
+                                                <span class="badge bg-danger">{{ "%.2f"|format(sim_score) }}</span>
+                                            {% elif sim_score >= 0.7 %}
+                                                <span class="badge bg-warning text-dark">{{ "%.2f"|format(sim_score) }}</span>
+                                            {% elif sim_score >= 0.6 %}
+                                                <span class="badge bg-primary">{{ "%.2f"|format(sim_score) }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ "%.2f"|format(sim_score) }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark border">{{ title.id }}</span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similarity Visualization -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>
+                        Visualisasi Kesamaan
+                    </h4>
+                    <div class="similarity-bar-container p-3 bg-light rounded mb-4">
+                        <div class="row">
+                            {% for title in results.similar_titles %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 border-0 shadow-sm hover-card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ title.title }}</h6>
+                                            <div class="progress mt-3 mb-2" style="height: 25px;">
+                                                {% set sim_score = title.similarity * 100 %}
+                                                <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ sim_score }}%;" aria-valuenow="{{ sim_score }}" aria-valuemin="0" aria-valuemax="100">
+                                                    {{ "%.1f"|format(sim_score) }}%
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-2">
+                                                <small class="text-muted">ID: {{ title.id }}</small>
+                                                <small class="text-muted">
+                                                    {% if sim_score >= 80 %}
+                                                        <span class="text-danger">Kesamaan tinggi</span>
+                                                    {% elif sim_score >= 70 %}
+                                                        <span class="text-warning">Kesamaan sedang</span>
+                                                    {% elif sim_score >= 60 %}
+                                                        <span class="text-primary">Kesamaan rendah</span>
+                                                    {% else %}
+                                                        <span class="text-secondary">Kesamaan minimal</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interpretation Guidelines -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Pedoman Interpretasi
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0 me-3">
+                                    <span class="badge bg-danger p-2">0.80 - 1.00</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Kesamaan Tinggi</h6>
+                                    <p class="text-muted small">Judul sangat mirip dan mungkin dianggap duplikat.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0 me-3">
+                                    <span class="badge bg-warning text-dark p-2">0.70 - 0.79</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Kesamaan Sedang</h6>
+                                    <p class="text-muted small">Judul memiliki tumpang tindih yang signifikan dan harus ditinjau.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0 me-3">
+                                    <span class="badge bg-primary p-2">0.60 - 0.69</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Kesamaan Rendah</h6>
+                                    <p class="text-muted small">Ada beberapa kesamaan, tetapi judul kemungkinan berbeda.</p>
+                                </div>
+                            </div>
+                            <div class="d-flex mb-3">
+                                <div class="flex-shrink-0 me-3">
+                                    <span class="badge bg-secondary p-2">< 0.60</span>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Kesamaan Minimal</h6>
+                                    <p class="text-muted small">Judul sebagian besar tidak terkait.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 text-center">
+                    <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                    <h3>Tidak Ditemukan Judul Serupa</h3>
+                    <p class="text-muted">Tidak ada judul dengan kesamaan signifikan yang ditemukan dalam database.</p>
+                    <a href="{{ url_for('check_title') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-search me-2"></i>
+                        Coba Judul Lain
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Highlight active nav link
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        navLinks.forEach(function(link) {
+            if (link.getAttribute('href') === '/check') {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

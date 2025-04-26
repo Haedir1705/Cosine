@@ -1,0 +1,13 @@
+Flask
+numpy
+pandas
+scikit-learn
+nltk
+mysql-connector-python
+python-dotenv
+matplotlib
+seaborn
+Werkzeug
+Jinja2
+MarkupSafe
+itsdangerous

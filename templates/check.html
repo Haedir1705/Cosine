@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Periksa Judul - Detektor Kesamaan Skripsi Unismuh Makassar FKIP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-0 shadow-lg">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                    <h2 class="card-title">Periksa Kesamaan Judul Skripsi</h2>
+                    <p class="text-muted">Masukkan judul skripsi untuk memeriksa kesamaannya dengan judul-judul yang ada di database.</p>
+                </div>
+
+                <form action="{{ url_for('check_title') }}" method="post" class="needs-validation" novalidate>
+                    <div class="mb-4">
+                        <label for="title" class="form-label">Judul Skripsi</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-primary text-white">
+                                <i class="fas fa-file-alt"></i>
+                            </span>
+                            <textarea class="form-control" id="title" name="title" rows="3" required placeholder="Masukkan judul skripsi lengkap di sini..."></textarea>
+                            <div class="invalid-feedback">
+                                Silakan masukkan judul skripsi.
+                            </div>
+                        </div>
+                        <div class="form-text">Untuk hasil terbaik, masukkan judul skripsi lengkap.</div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-search me-2"></i>
+                            Periksa Kesamaan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h4 class="card-title mb-3">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                    Tips untuk Memeriksa Judul
+                </h4>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 text-primary me-3">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Gunakan Judul Lengkap</h6>
+                                <p class="text-muted small mb-0">Judul lengkap memberikan akurasi pencocokan yang lebih baik.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 text-primary me-3">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Sertakan Kata Kunci</h6>
+                                <p class="text-muted small mb-0">Kata kunci penting membantu meningkatkan deteksi kesamaan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 text-primary me-3">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Periksa Beberapa Variasi</h6>
+                                <p class="text-muted small mb-0">Coba frase berbeda jika hasilnya tidak pasti.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="flex-shrink-0 text-primary me-3">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Tinjau Semua Kecocokan</h6>
+                                <p class="text-muted small mb-0">Bahkan skor kesamaan yang lebih rendah dapat mengungkapkan karya terkait.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('.needs-validation');
+
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+
+        // Highlight active nav item
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        navLinks.forEach(function(link) {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

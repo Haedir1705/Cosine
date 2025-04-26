@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Pasangan Serupa - Detektor Kesamaan Skripsi Unismuh Makassar FKIP{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-clone text-primary me-2"></i>
+                        Pasangan Judul Skripsi Serupa
+                    </h2>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-sm mt-2 mt-md-0">
+                        <i class="fas fa-home me-2"></i>
+                        Kembali ke Beranda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="card-title mb-3">
+                    <i class="fas fa-filter text-primary me-2"></i>
+                    Filter Hasil
+                </h4>
+                <form action="{{ url_for('view_similar_pairs') }}" method="get" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="min_similarity" class="form-label">Kesamaan Minimum</label>
+                        <div class="input-group">
+                            <input
+                                type="range"
+                                class="form-range"
+                                min="0.6"
+                                max="1.0"
+                                step="0.05"
+                                id="min_similarity"
+                                name="min_similarity"
+                                value="{{ min_similarity }}"
+                                oninput="document.getElementById('min_similarity_value').innerText = this.value"
+                            >
+                            <span class="ms-2" id="min_similarity_value">{{ min_similarity }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="max_similarity" class="form-label">Kesamaan Maksimum</label>
+                        <div class="input-group">
+                            <input
+                                type="range"
+                                class="form-range"
+                                min="0.6"
+                                max="1.0"
+                                step="0.05"
+                                id="max_similarity"
+                                name="max_similarity"
+                                value="{{ max_similarity }}"
+                                oninput="document.getElementById('max_similarity_value').innerText = this.value"
+                            >
+                            <span class="ms-2" id="max_similarity_value">{{ max_similarity }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-2"></i>
+                            Terapkan Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Similar Pairs List -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2"></i>
+                        Pasangan Serupa Terdeteksi
+                    </h4>
+                    <span class="badge bg-primary">{{ pairs|length }} pasangan ditampilkan</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if pairs %}
+                    <div class="list-group list-group-flush">
+                        {% for pair in pairs %}
+                            <div class="list-group-item p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">
+                                        {% set sim_score = pair.similarity %}
+                                        {% if sim_score >= 0.8 %}
+                                            <span class="badge bg-danger p-2">{{ "%.4f"|format(sim_score) }}</span>
+                                        {% elif sim_score >= 0.7 %}
+                                            <span class="badge bg-warning text-dark p-2">{{ "%.4f"|format(sim_score) }}</span>
+                                        {% else %}
+                                            <span class="badge bg-primary p-2">{{ "%.4f"|format(sim_score) }}</span>
+                                        {% endif %}
+                                        <span class="ms-2">Skor Kesamaan</span>
+                                    </h5>
+                                    <span class="badge bg-light text-dark border">ID: {{ pair.id1 }} & {{ pair.id2 }}</span>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title"><i class="fas fa-file-alt me-2 text-primary"></i>Judul 1:</h6>
+                                                <p class="card-text">{{ pair.title1 }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border bg-light">
+                                            <div class="card-body">
+                                                <h6 class="card-title"><i class="fas fa-file-alt me-2 text-primary"></i>Judul 2:</h6>
+                                                <p class="card-text">{{ pair.title2 }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center p-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4>Tidak Ditemukan Pasangan Serupa</h4>
+                        <p class="text-muted">Tidak ada pasangan skripsi yang sesuai dengan kriteria filter Anda.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if total_pages > 1 %}
+                <div class="card-footer bg-white py-3">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- Previous Button -->
+                            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('view_similar_pairs', page=page-1, min_similarity=min_similarity, max_similarity=max_similarity) }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            {% set start_page = [1, page - 2]|max %}
+                            {% set end_page = [total_pages, start_page + 4]|min %}
+                            {% set start_page = [1, end_page - 4]|max %}
+
+                            {% if start_page > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('view_similar_pairs', page=1, min_similarity=min_similarity, max_similarity=max_similarity) }}">1</a>
+                                </li>
+                                {% if start_page > 2 %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+
+                            {% for p in range(start_page, end_page + 1) %}
+                                <li class="page-item {% if p == page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('view_similar_pairs', page=p, min_similarity=min_similarity, max_similarity=max_similarity) }}">{{ p }}</a>
+                                </li>
+                            {% endfor %}
+
+                            {% if end_page < total_pages %}
+                                {% if end_page < total_pages - 1 %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('view_similar_pairs', page=total_pages, min_similarity=min_similarity, max_similarity=max_similarity) }}">{{ total_pages }}</a>
+                                </li>
+                            {% endif %}
+
+                            <!-- Next Button -->
+                            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('view_similar_pairs', page=page+1, min_similarity=min_similarity, max_similarity=max_similarity) }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Highlight active nav link
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        navLinks.forEach(function(link) {
+            if (link.getAttribute('href').includes('similar_pairs')) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

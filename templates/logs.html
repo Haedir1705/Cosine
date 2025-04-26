@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Log Sistem - Detektor Kesamaan Skripsi Unismuh Makassar FKIP{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-container {
+        max-height: 600px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        font-family: monospace;
+    }
+    .log-line {
+        padding: 0.25rem 0.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .log-line:hover {
+        background-color: #e9ecef;
+    }
+    .timestamp {
+        color: #6c757d;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+    .step-header {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    .log-search {
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 100;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-history text-primary me-2"></i>
+                        Log Sistem
+                    </h2>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-sm mt-2 mt-md-0">
+                        <i class="fas fa-home me-2"></i>
+                        Kembali ke Beranda
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                        <i class="fas fa-database text-primary fa-2x"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Total Judul</h6>
+                        <h3 class="mb-0">{{ stats.total_titles }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="fas fa-check-circle text-success fa-2x"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Pemeriksaan</h6>
+                        <h3 class="mb-0">{{ stats.check_count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                        <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Pasangan Serupa</h6>
+                        <h3 class="mb-0">{{ stats.similar_pairs }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                        <i class="fas fa-calendar text-info fa-2x"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="text-muted mb-1">Terakhir Diperbarui</h6>
+                        <h3 class="mb-0">{{ stats.last_updated }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Logs List -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-list text-primary me-2"></i>
+                        Riwayat Log Sistem
+                    </h4>
+                    <div>
+                        <form action="{{ url_for('view_logs') }}" method="get" class="d-flex">
+                            <select name="type" class="form-select me-2" onchange="this.form.submit()">
+                                <option value="all" {% if log_type == 'all' %}selected{% endif %}>Semua Log</option>
+                                <option value="check" {% if log_type == 'check' %}selected{% endif %}>Pemeriksaan</option>
+                                <option value="system" {% if log_type == 'system' %}selected{% endif %}>Sistem</option>
+                                <option value="training" {% if log_type == 'training' %}selected{% endif %}>Pelatihan</option>
+                                <option value="error" {% if log_type == 'error' %}selected{% endif %}>Error</option>
+                            </select>
+                            <input type="hidden" name="page" value="1">
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if logs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Tipe</th>
+                                    <th>Pesan</th>
+                                    <th>Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs %}
+                                    <tr>
+                                        <td>{{ log.id }}</td>
+                                        <td>{{ log.timestamp }}</td>
+                                        <td>
+                                            {% if log.type == 'check' %}
+                                                <span class="badge bg-primary">Pemeriksaan</span>
+                                            {% elif log.type == 'system' %}
+                                                <span class="badge bg-secondary">Sistem</span>
+                                            {% elif log.type == 'training' %}
+                                                <span class="badge bg-success">Pelatihan</span>
+                                            {% elif log.type == 'error' %}
+                                                <span class="badge bg-danger">Error</span>
+                                            {% else %}
+                                                <span class="badge bg-info">{{ log.type }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ log.message }}</td>
+                                        <td>
+                                            {% if log.details %}
+                                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#logModal{{ log.id }}">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </button>
+                                                <!-- Modal for log details -->
+                                                <div class="modal fade" id="logModal{{ log.id }}" tabindex="-1" aria-labelledby="logModalLabel{{ log.id }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="logModalLabel{{ log.id }}">
+                                                                    Detail Log #{{ log.id }}
+                                                                </h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-4">
+                                                                        <p><strong>ID:</strong> {{ log.id }}</p>
+                                                                        <p><strong>Timestamp:</strong> {{ log.timestamp }}</p>
+                                                                        <p><strong>Tipe:</strong> {{ log.type }}</p>
+                                                                    </div>
+                                                                    <div class="col-md-8">
+                                                                        <p><strong>Pesan:</strong></p>
+                                                                        <p>{{ log.message }}</p>
+                                                                        <p><strong>Detail:</strong></p>
+                                                                        <pre class="bg-light p-3 rounded"><code>{{ log.details }}</code></pre>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center p-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h4>Tidak Ada Log</h4>
+                        <p class="text-muted">Tidak ada log yang tersedia untuk kriteria filter yang dipilih.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pagination Controls -->
+            {% if total_pages > 1 %}
+                <div class="card-footer bg-white py-3">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <!-- Previous Button -->
+                            <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('view_logs', page=page-1, type=log_type) }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            {% set start_page = [1, page - 2]|max %}
+                            {% set end_page = [total_pages, start_page + 4]|min %}
+                            {% set start_page = [1, end_page - 4]|max %}
+
+                            {% if start_page > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('view_logs', page=1, type=log_type) }}">1</a>
+                                </li>
+                                {% if start_page > 2 %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endif %}
+
+                            {% for p in range(start_page, end_page + 1) %}
+                                <li class="page-item {% if p == page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('view_logs', page=p, type=log_type) }}">{{ p }}</a>
+                                </li>
+                            {% endfor %}
+
+                            {% if end_page < total_pages %}
+                                {% if end_page < total_pages - 1 %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('view_logs', page=total_pages, type=log_type) }}">{{ total_pages }}</a>
+                                </li>
+                            {% endif %}
+
+                            <!-- Next Button -->
+                            <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('view_logs', page=page+1, type=log_type) }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Highlight active nav link
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        navLinks.forEach(function(link) {
+            if (link.getAttribute('href').includes('logs')) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

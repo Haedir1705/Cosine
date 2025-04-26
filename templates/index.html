@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Beranda - Detektor Kesamaan Skripsi Unismuh Makassar FKIP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <div class="text-center mb-5">
+                    <i class="fas fa-project-diagram fa-4x text-primary mb-3"></i>
+                    <h1 class="display-5 fw-bold">Detektor Kesamaan Skripsi</h1>
+                    <p class="lead text-muted">
+                        Temukan kesamaan antara judul skripsi menggunakan teknik NLP dan kesamaan kosinus.
+                    </p>
+                </div>
+
+                <div class="row mb-5">
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-robot fa-3x text-primary mb-3"></i>
+                                <h4>Pemrosesan NLP</h4>
+                                <p class="text-muted">
+                                    Menggunakan tokenisasi, stemming, dan TF-IDF untuk memproses judul skripsi.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                                <h4>Analisis Kesamaan</h4>
+                                <p class="text-muted">
+                                    Menghitung kesamaan kosinus antara judul untuk mengidentifikasi kemungkinan duplikat.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center p-4">
+                                <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                                <h4>Pemeriksaan Cepat</h4>
+                                <p class="text-muted">
+                                    Periksa dengan cepat apakah judul skripsi baru mirip dengan judul yang sudah ada.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    {% if processed %}
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Model telah dilatih dan siap digunakan.
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-md-6">
+                                <a href="{{ url_for('check_title') }}" class="btn btn-primary btn-lg w-100 mb-3">
+                                    <i class="fas fa-search me-2"></i>
+                                    Periksa Judul Baru
+                                </a>
+                                <a href="{{ url_for('view_similar_pairs') }}" class="btn btn-outline-primary btn-lg w-100">
+                                    <i class="fas fa-list me-2"></i>
+                                    Lihat Pasangan Serupa
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Model perlu dilatih sebelum digunakan.
+                        </div>
+                        <form action="{{ url_for('train') }}" method="post">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 py-3">
+                                <i class="fas fa-cogs me-2"></i>
+                                Latih Model
+                                <span class="ms-2 small">(Ini mungkin memerlukan beberapa menit)</span>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h3 class="card-title">Cara Kerja</h3>
+                <div class="row mt-4">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-database fa-2x text-primary"></i>
+                        </div>
+                        <h5>1. Pengumpulan Data</h5>
+                        <p class="small text-muted">Mengumpulkan judul skripsi dari database</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-file-alt fa-2x text-primary"></i>
+                        </div>
+                        <h5>2. Pra-pemrosesan</h5>
+                        <p class="small text-muted">Tokenisasi, penghapusan kata umum, stemming</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-vector-square fa-2x text-primary"></i>
+                        </div>
+                        <h5>3. Ekstraksi Fitur</h5>
+                        <p class="small text-muted">Mengubah teks menjadi vektor TF-IDF</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="fas fa-percentage fa-2x text-primary"></i>
+                        </div>
+                        <h5>4. Analisis Kesamaan</h5>
+                        <p class="small text-muted">Menghitung kesamaan kosinus antar vektor</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
