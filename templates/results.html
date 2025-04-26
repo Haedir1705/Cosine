@@ -137,22 +137,22 @@
                             <tr>
                                 <td><strong>Accuracy</strong></td>
                                 <td>{{ "%.4f"|format(results.evaluation.metrics.accuracy) }}</td>
-                                <td>Proportion of correct predictions (both similar and different)</td>
+                                <td>Proporsi prediksi yang benar (baik yang serupa maupun berbeda)</td>
                             </tr>
                             <tr>
                                 <td><strong>Precision</strong></td>
                                 <td>{{ "%.4f"|format(results.evaluation.metrics.precision) }}</td>
-                                <td>Proportion of predicted similar pairs that are actually similar</td>
+                                <td>Proporsi pasangan serupa yang diprediksi namun sebenarnya serupa</td>
                             </tr>
                             <tr>
                                 <td><strong>Recall</strong></td>
                                 <td>{{ "%.4f"|format(results.evaluation.metrics.recall) }}</td>
-                                <td>Proportion of actual similar pairs that were correctly identified</td>
+                                <td>Proporsi pasangan serupa yang sebenarnya yang diidentifikasi dengan benar</td>
                             </tr>
                             <tr>
                                 <td><strong>F1-Score</strong></td>
                                 <td>{{ "%.4f"|format(results.evaluation.metrics.f1_score) }}</td>
-                                <td>Harmonic mean of precision and recall</td>
+                                <td>Rata-rata harmonik presisi dan recall</td>
                             </tr>
                         </tbody>
                     </table>
