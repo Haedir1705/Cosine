@@ -23,7 +23,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 
 # Download NLTK resources
-nltk.download('punkt_tab')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 # Load environment variables
@@ -201,21 +201,21 @@ class ThesisSimilarityDetector:
                     'actual_similarity': similarity_matrix[i][j]
                 })
 
-        # Sample a balanced dataset for evaluation
-        # Choose some high similarity pairs
+        # Sample a balanced dataset for evaluation - total 1000 pairs
+        # Choose high similarity pairs
         high_sim_pairs = [p for p in all_pairs if p['actual_similarity'] >= 0.7]
-        if len(high_sim_pairs) > 200:
-            high_sim_pairs = random.sample(high_sim_pairs, 200)
+        if len(high_sim_pairs) > 333:
+            high_sim_pairs = random.sample(high_sim_pairs, 333)
 
-        # Choose some medium similarity pairs
+        # Choose medium similarity pairs
         med_sim_pairs = [p for p in all_pairs if 0.4 <= p['actual_similarity'] < 0.7]
-        if len(med_sim_pairs) > 200:
-            med_sim_pairs = random.sample(med_sim_pairs, 200)
+        if len(med_sim_pairs) > 333:
+            med_sim_pairs = random.sample(med_sim_pairs, 333)
 
-        # Choose some low similarity pairs
+        # Choose low similarity pairs
         low_sim_pairs = [p for p in all_pairs if p['actual_similarity'] < 0.4]
-        if len(low_sim_pairs) > 200:
-            low_sim_pairs = random.sample(low_sim_pairs, 200)
+        if len(low_sim_pairs) > 334:
+            low_sim_pairs = random.sample(low_sim_pairs, 334)
 
         # Combine all sampled pairs
         eval_pairs = high_sim_pairs + med_sim_pairs + low_sim_pairs
@@ -224,7 +224,6 @@ class ThesisSimilarityDetector:
         # Assign ground truth labels
         for pair in eval_pairs:
             # Add some noise to make evaluation more realistic
-            # Sometimes similar titles might be marked as different and vice versa
             noise = random.uniform(-0.15, 0.15)
             adjusted_sim = pair['actual_similarity'] + noise
 
@@ -237,8 +236,8 @@ class ThesisSimilarityDetector:
         self.log(f"Created evaluation dataset with {len(eval_pairs)} pairs")
         return eval_pairs
 
-    def evaluate_model(self, thresholds=[0.5, 0.6, 0.7, 0.8], k_folds=5):
-        """Evaluate the model using cross-validation"""
+    def evaluate_model(self, thresholds=[0.5, 0.6, 0.7, 0.8]):
+        """Evaluate the model using fixed train-test split"""
         if not hasattr(self, 'processed_titles') or self.tfidf_matrix is None:
             self.log("No processed data or TF-IDF matrix available")
             return None
@@ -252,78 +251,43 @@ class ThesisSimilarityDetector:
         X = [(p['idx1'], p['idx2']) for p in eval_pairs]
         y = [p['ground_truth'] for p in eval_pairs]
 
-        # Prepare for cross-validation
-        kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.9, random_state=42)
+
+        self.log(f"Split data into train ({len(X_train)} pairs) and test ({len(X_test)} pairs) sets")
 
         # Store results for each threshold
         threshold_results = {}
-        fold_details = {}
 
         # Test multiple thresholds
         for threshold in thresholds:
             self.log(f"\nEvaluating with similarity threshold: {threshold}")
 
-            fold_metrics = {
-                'accuracy': [],
-                'precision': [],
-                'recall': [],
-                'f1_score': []
+            # Make predictions based on similarity scores and threshold
+            y_pred = []
+            for i, j in X_test:
+                sim_score = cosine_similarity(
+                    self.tfidf_matrix[i].reshape(1, -1),
+                    self.tfidf_matrix[j].reshape(1, -1)
+                )[0][0]
+                y_pred.append(1 if sim_score >= threshold else 0)
+
+            # Calculate metrics
+            accuracy = accuracy_score(y_test, y_pred)
+            precision = precision_score(y_test, y_pred, zero_division=0)
+            recall = recall_score(y_test, y_pred, zero_division=0)
+            f1 = f1_score(y_test, y_pred, zero_division=0)
+
+            metrics = {
+                'accuracy': accuracy,
+                'precision': precision,
+                'recall': recall,
+                'f1_score': f1
             }
 
-            fold_details[threshold] = []
+            self.log(f"Accuracy={accuracy:.4f}, Precision={precision:.4f}, "
+                f"Recall={recall:.4f}, F1-Score={f1:.4f}")
 
-            for fold, (train_idx, test_idx) in enumerate(kf.split(X)):
-                # Split data into train and test sets
-                X_train = [X[i] for i in train_idx]
-                X_test = [X[i] for i in test_idx]
-                y_train = [y[i] for i in train_idx]
-                y_test = [y[i] for i in test_idx]
-
-                # Make predictions based on similarity scores and threshold
-                y_pred = []
-                for i, j in X_test:
-                    sim_score = cosine_similarity(
-                        self.tfidf_matrix[i].reshape(1, -1),
-                        self.tfidf_matrix[j].reshape(1, -1)
-                    )[0][0]
-                    y_pred.append(1 if sim_score >= threshold else 0)
-
-                # Calculate metrics
-                accuracy = accuracy_score(y_test, y_pred)
-                precision = precision_score(y_test, y_pred, zero_division=0)
-                recall = recall_score(y_test, y_pred, zero_division=0)
-                f1 = f1_score(y_test, y_pred, zero_division=0)
-
-                # Store metrics for this fold
-                fold_metrics['accuracy'].append(accuracy)
-                fold_metrics['precision'].append(precision)
-                fold_metrics['recall'].append(recall)
-                fold_metrics['f1_score'].append(f1)
-
-                fold_details[threshold].append({
-                    'fold': fold + 1,
-                    'accuracy': accuracy,
-                    'precision': precision,
-                    'recall': recall,
-                    'f1_score': f1
-                })
-
-                self.log(f"Fold {fold+1}: Accuracy={accuracy:.4f}, Precision={precision:.4f}, "
-                      f"Recall={recall:.4f}, F1-Score={f1:.4f}")
-
-            # Calculate average metrics across all folds
-            avg_metrics = {
-                'accuracy': np.mean(fold_metrics['accuracy']),
-                'precision': np.mean(fold_metrics['precision']),
-                'recall': np.mean(fold_metrics['recall']),
-                'f1_score': np.mean(fold_metrics['f1_score'])
-            }
-
-            self.log(f"\nAverage metrics for threshold {threshold}:")
-            for metric, value in avg_metrics.items():
-                self.log(f"{metric}: {value:.4f}")
-
-            threshold_results[threshold] = avg_metrics
+            threshold_results[threshold] = metrics
 
         # Find the best threshold based on F1 score
         best_threshold = max(threshold_results, key=lambda t: threshold_results[t]['f1_score'])
@@ -338,7 +302,8 @@ class ThesisSimilarityDetector:
             'best_threshold': best_threshold,
             'metrics': best_metrics,
             'all_thresholds': threshold_results,
-            'fold_details': fold_details
+            'train_size': len(X_train),
+            'test_size': len(X_test)
         }
 
     def check_title_similarity(self, new_title):
